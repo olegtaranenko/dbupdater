@@ -4,7 +4,7 @@
 	<artifactId>mssql-updater-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>MSSQL DB updater</name>
-	<version>2.0</version>
+	<version>2.0-SNAPSHOT</version>
 	<description>Update MSSQL databases for Reckitt Benckiser Applications</description>
 
 
@@ -12,16 +12,40 @@
 		<sourceDirectory>src/main/liquibase</sourceDirectory>
 		<resources>
 			<resource>
-		        <directory>${basedir}/src/main/liquibase</directory>
-		        <includes>
-		        	<include>**/*.xml</include>
-		        	<include>**/*.sql</include>
-		        	<include>**/*.csv</include>
-		        </includes>
+				<directory>src/main/liquibase</directory>
+				<includes>
+					<include>**/*.xml</include>
+					<include>**/*.sql</include>
+					<include>**/*.csv</include>
+				</includes>
 			</resource>
 		</resources>
 		<pluginManagement>
 			<plugins>
+<!--
+				<plugin>
+					<artifactId>maven-resources-plugin</artifactId>
+					<version>2.4.3</version>
+					<executions>
+						<execution>
+							<id>copy-resources</id>
+							<phase>process-resources</phase>
+							<goals>
+								<goal>copy-resources</goal>
+							</goals>
+							<configuration>
+								<outputDirectory>${basedir}/target/extra-resources</outputDirectory>
+								<resources>
+									<resource>
+										<directory>src/non-packaged-resources</directory>
+										<filtering>true</filtering>
+									</resource>
+								</resources>							
+							</configuration>						
+						</execution>
+					</executions>
+				</plugin>
+-->
 				<plugin>
 					<groupId>org.liquibase</groupId>
 					<artifactId>liquibase-maven-plugin</artifactId>
@@ -59,12 +83,52 @@
 						</execution>
 					</executions>
 				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>sql-maven-plugin</artifactId>
+					<version>${sql.version}</version>
+		 
+					<dependencies>
+						<!-- specify the dependent jdbc driver here -->
+						<dependency>
+							<groupId>${mssql.driver.groupId}</groupId>
+							<artifactId>${mssql.driver.artifactId}</artifactId>
+							<version>${mssql.driver.version}</version>
+						</dependency>
+					</dependencies>
+		 
+					<!-- common configuration shared by all executions -->
+					<configuration>
+						<url>jdbc:jtds:sqlserver://${mssql.server}:${mssql.url.port};DatabaseName=${mssql.url.databasename}</url>
+						<driver>${mssql.driver}</driver>
+						<username>${mssql.username}</username>
+						<password>${mssql.password}</password>
+						<autocommit>true</autocommit>
+						<delimiterType>row</delimiterType>
+						<delimiter>GO</delimiter>
+						<keepFormat>true</keepFormat>
+<!--
+						<onError>continue</onError>
+-->
+					</configuration>
+					<executions>
+						<execution>
+							<id>apply-sql</id>
+							<phase>install</phase>
+							<goals>
+								<goal>execute</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+
 			</plugins>
 		</pluginManagement>
 	</build>
 
 	<properties>
 		<liquibase.version>2.0-rc2-SNAPSHOT</liquibase.version>
+		<sql.version>1.3</sql.version>
 		<mssql.driver.groupId>net.sourceforge.jtds</mssql.driver.groupId>
 		<mssql.driver>net.sourceforge.jtds.jdbc.Driver</mssql.driver>
 		<mssql.driver.artifactId>jtds</mssql.driver.artifactId>
@@ -74,8 +138,17 @@
 		<changelog.PATH>${project.build.outputDirectory}</changelog.PATH>
 		<changelog.file>${changelog.PATH}/changeset-${project.artifactId}.xml</changelog.file>
 		<changelog.context>current</changelog.context>
+		<mssql.server>localhost</mssql.server>
+		<mssql.url.port>1433</mssql.url.port>
 	</properties>
+
 	<profiles>
+		<profile>
+			<id>checksum-correction</id>
+			<properties>
+				<changelog.file>${changelog.PATH}/checksum-${project.artifactId}.xml</changelog.file>
+			</properties>
+		</profile>
 		<profile>
 			<id>development</id>
 			<build>
@@ -86,6 +159,16 @@
 						<version>${liquibase.version}</version>
 						<configuration>
 							<contexts>development</contexts>
+						</configuration>
+					</plugin>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>sql-maven-plugin</artifactId>
+						<version>${sql.version}</version>
+						<configuration>
+							<srcFiles>
+								<srcFile>${project.artifactId}-develompent.sql</srcFile>
+							</srcFiles>
 						</configuration>
 					</plugin>
 				</plugins>
