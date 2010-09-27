@@ -59,7 +59,7 @@
 					</dependencies>
 					<configuration>
 						<changeLogFile>${changelog.file}</changeLogFile>
-						<url>jdbc:jtds:sqlserver://${mssql.server}:${mssql.url.port};DatabaseName=${mssql.url.databasename}</url>
+						<url>jdbc:jtds:sqlserver://${mssql.server};namedPipe=true;databaseName=${mssql.url.databasename}</url>
 						<driver>${mssql.driver}</driver>
 						<username>${mssql.username}</username>
 						<password>${mssql.password}</password>
@@ -99,7 +99,7 @@
 		 
 					<!-- common configuration shared by all executions -->
 					<configuration>
-						<url>jdbc:jtds:sqlserver://${mssql.server}:${mssql.url.port};DatabaseName=${mssql.url.databasename}</url>
+						<url>jdbc:jtds:sqlserver://${mssql.server};namedPipe=true;databaseName=${mssql.url.databasename}</url>
 						<driver>${mssql.driver}</driver>
 						<username>${mssql.username}</username>
 						<password>${mssql.password}</password>
@@ -127,7 +127,7 @@
 	</build>
 
 	<properties>
-		<liquibase.version>2.0-rc6-SNAPSHOT</liquibase.version>
+		<liquibase.version>2.0-rc5</liquibase.version>
 		<sql.plugin.version>1.4</sql.plugin.version>
 		<mssql.driver.groupId>net.sourceforge.jtds</mssql.driver.groupId>
 		<mssql.driver>net.sourceforge.jtds.jdbc.Driver</mssql.driver>
@@ -138,7 +138,7 @@
 		<changelog.PATH>${project.build.outputDirectory}</changelog.PATH>
 		<changelog.file>${changelog.PATH}/changeset-${project.artifactId}.xml</changelog.file>
 		<changelog.context>current</changelog.context>
-		<mssql.server>localhost</mssql.server>
+		<mssql.server>${env.COMPUTERNAME}</mssql.server>
 		<mssql.url.port>1433</mssql.url.port>
 	</properties>
 
