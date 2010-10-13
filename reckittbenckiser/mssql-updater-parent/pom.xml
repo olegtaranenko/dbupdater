@@ -24,26 +24,12 @@
 			<plugins>
 <!--
 				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-resources-plugin</artifactId>
 					<version>2.4.3</version>
-					<executions>
-						<execution>
-							<id>copy-resources</id>
-							<phase>process-resources</phase>
-							<goals>
-								<goal>copy-resources</goal>
-							</goals>
-							<configuration>
-								<outputDirectory>${basedir}/target/extra-resources</outputDirectory>
-								<resources>
-									<resource>
-										<directory>src/non-packaged-resources</directory>
-										<filtering>true</filtering>
-									</resource>
-								</resources>							
-							</configuration>						
-						</execution>
-					</executions>
+					<configuration>
+						<escapeString>\\</escapeString>
+					</configuration>
 				</plugin>
 -->
 				<plugin>
@@ -146,53 +132,51 @@
 		<profile>
 			<id>dbreload</id>
 			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.codehaus.mojo</groupId>
-						<artifactId>exec-maven-plugin</artifactId>
-						<version>${exec.plugin.version}</version>
-						<executions>
-							<execution>
-	 							<id>sql-stop</id>
-								<phase>validate</phase>
-								<goals>
-									<goal>exec</goal>
-								</goals>
-								<configuration>
-									<executable>net</executable>
-									<arguments>
-										<argument>stop</argument>
-										<argument>MSSQLSERVER</argument>
-									</arguments>
-								</configuration>
-							</execution>
-							<execution>
-	 							<id>sql-start</id>
-								<phase>initialize</phase>
-								<goals>
-									<goal>exec</goal>
-								</goals>
-								<configuration>
-									<executable>net</executable>
-									<arguments>
-										<argument>start</argument>
-										<argument>MSSQLSERVER</argument>
-									</arguments>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
 				<pluginManagement>
 					<plugins>
+						<plugin>
+							<groupId>org.codehaus.mojo</groupId>
+							<artifactId>exec-maven-plugin</artifactId>
+							<version>${exec.plugin.version}</version>
+							<executions>
+								<execution>
+		 							<id>sql-stop</id>
+									<phase>initialize</phase>
+									<goals>
+										<goal>exec</goal>
+									</goals>
+									<configuration>
+										<executable>net</executable>
+										<arguments>
+											<argument>stop</argument>
+											<argument>MSSQLSERVER</argument>
+										</arguments>
+									</configuration>
+								</execution>
+								<execution>
+		 							<id>sql-start</id>
+									<phase>initialize</phase>
+									<goals>
+										<goal>exec</goal>
+									</goals>
+									<configuration>
+										<executable>net</executable>
+										<arguments>
+											<argument>start</argument>
+											<argument>MSSQLSERVER</argument>
+										</arguments>
+									</configuration>
+								</execution>
+							</executions>
+						</plugin>
 						<plugin>
 							<groupId>org.codehaus.mojo</groupId>
 							<artifactId>sql-maven-plugin</artifactId>
 							<configuration>
 								<enableFiltering>true</enableFiltering>
-								<url>jdbc:jtds:sqlserver://${mssql.server}:${mssql.url.port};DatabaseName=master</url>
+								<url>jdbc:jtds:sqlserver://${mssql.server};namedPipe=true;DatabaseName=master</url>
 								<srcFiles>
-									<sqlFile>${project.build.outputDirectory}/dbreload.sql</sqlFile>
+									<sqlFile>${project.build.outputDirectory}/dbreload${env.COMPUTERNAME}.sql</sqlFile>
 								</srcFiles>
 								<onError>continue</onError>
 							</configuration>
@@ -275,7 +259,7 @@
 			</snapshots>
 			<id>codehausSnapshots</id>
 			<name>Codehaus Snapshots</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
 			<layout>default</layout>
 		</repository>
 	</repositories>
@@ -293,7 +277,7 @@
 			</snapshots>
 			<id>codehausSnapshots</id>
 			<name>Codehaus Snapshots</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
 			<layout>default</layout>
 		</pluginRepository>
 	</pluginRepositories>
