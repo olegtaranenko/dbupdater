@@ -133,7 +133,7 @@
 		<mssql.driver>net.sourceforge.jtds.jdbc.Driver</mssql.driver>
 		<mssql.driver.artifactId>jtds</mssql.driver.artifactId>
 		<mssql.driver.version>1.2.2</mssql.driver.version>
-		<mssql.username>sa</mssql.username>
+		<mssql.username></mssql.username>
 		<mssql.password></mssql.password>
 		<changelog.PATH>${project.build.outputDirectory}</changelog.PATH>
 		<changelog.file>${changelog.PATH}/changeset-${project.artifactId}.xml</changelog.file>
