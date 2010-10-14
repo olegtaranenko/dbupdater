@@ -45,7 +45,7 @@
 					</dependencies>
 					<configuration>
 						<changeLogFile>${changelog.file}</changeLogFile>
-						<url>jdbc:jtds:sqlserver://${mssql.server};namedPipe=true;databaseName=${mssql.url.databasename}</url>
+						<url>jdbc:jtds:sqlserver://${mssql.server}${sql.protocol};databaseName=${mssql.url.databasename}</url>
 						<driver>${mssql.driver}</driver>
 						<username>${mssql.username}</username>
 						<password>${mssql.password}</password>
@@ -85,7 +85,7 @@
 		 
 					<!-- common configuration shared by all executions -->
 					<configuration>
-						<url>jdbc:jtds:sqlserver://${mssql.server};namedPipe=true;databaseName=${mssql.url.databasename}</url>
+						<url>jdbc:jtds:sqlserver://${mssql.server};databaseName=${mssql.url.databasename}</url>
 						<driver>${mssql.driver}</driver>
 						<username>${mssql.username}</username>
 						<password>${mssql.password}</password>
@@ -126,6 +126,7 @@
 		<changelog.context>current</changelog.context>
 		<mssql.server>${env.COMPUTERNAME}</mssql.server>
 		<mssql.url.port>1433</mssql.url.port>
+		<sql.protocol>;namedPipe=true</sql.protocol>
 	</properties>
 
 	<profiles>
@@ -174,7 +175,7 @@
 							<artifactId>sql-maven-plugin</artifactId>
 							<configuration>
 								<enableFiltering>true</enableFiltering>
-								<url>jdbc:jtds:sqlserver://${mssql.server};namedPipe=true;DatabaseName=master</url>
+								<url>jdbc:jtds:sqlserver://${mssql.server}${sql.protocol};DatabaseName=master</url>
 								<srcFiles>
 									<sqlFile>${project.build.outputDirectory}/dbreload${env.COMPUTERNAME}.sql</sqlFile>
 								</srcFiles>
@@ -244,6 +245,50 @@
 				</plugins>
 			</build>
 		</profile>
+
+		<profile>
+			<id>on-taranenko</id>
+			<activation>
+				<property>
+					<name>dev.station</name>
+					<value>TARANENKO</value>
+				</property>
+			</activation>
+
+			<properties>
+				<sql.protocol>:${mssql.url.port}</sql.protocol>
+			</properties>
+		</profile>
+
+		<profile>
+			<id>on-live</id>
+			<activation>
+				<property>
+					<name>live</name>
+				</property>
+			</activation>
+
+			<properties>
+				<sql.protocol>:${mssql.url.port}</sql.protocol>
+			</properties>
+			<build>
+				<pluginManagement>
+					<plugins>
+						<plugin>
+							<groupId>org.liquibase</groupId>
+							<artifactId>liquibase-maven-plugin</artifactId>
+							<version>${liquibase.version}</version>
+							<configuration>
+								<promptOnNonLocalDatabase>true</promptOnNonLocalDatabase>
+								<contexts>production</contexts>
+							</configuration>
+						</plugin>
+					</plugins>
+				</pluginManagement>
+			</build>
+
+		</profile>
+		
 	</profiles>
 	<repositories>
 		<repository>
