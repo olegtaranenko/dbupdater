@@ -85,7 +85,7 @@
 		 
 					<!-- common configuration shared by all executions -->
 					<configuration>
-						<url>jdbc:jtds:sqlserver://${mssql.server};databaseName=${mssql.url.databasename}</url>
+						<url>jdbc:jtds:sqlserver://${mssql.server}${sql.protocol};databaseName=${mssql.url.databasename}</url>
 						<driver>${mssql.driver}</driver>
 						<username>${mssql.username}</username>
 						<password>${mssql.password}</password>
