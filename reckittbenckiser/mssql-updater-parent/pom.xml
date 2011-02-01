@@ -88,7 +88,7 @@
 		 
 					<!-- common configuration shared by all executions -->
 					<configuration>
-						<url>jdbc:jtds:sqlserver://${mssql.server};databaseName=${mssql.url.databasename}</url>
+						<url>jdbc:jtds:sqlserver://${mssql.server}${sql.protocol};databaseName=${mssql.url.databasename}</url>
 						<driver>${mssql.driver}</driver>
 						<username>${mssql.username}</username>
 						<password>${mssql.password}</password>
@@ -294,40 +294,4 @@
 		</profile>
 		
 	</profiles>
-	<repositories>
-		<repository>
-			<releases>
-				<enabled>false</enabled>
-				<updatePolicy>always</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-				<checksumPolicy>fail</checksumPolicy>
-			</snapshots>
-			<id>codehausSnapshots</id>
-			<name>Codehaus Snapshots</name>
-			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-			<layout>default</layout>
-		</repository>
-	</repositories>
-	<pluginRepositories>
-		<pluginRepository>
-			<releases>
-				<enabled>false</enabled>
-				<updatePolicy>always</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-				<checksumPolicy>fail</checksumPolicy>
-			</snapshots>
-			<id>codehausSnapshots</id>
-			<name>Codehaus Snapshots</name>
-			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-			<layout>default</layout>
-		</pluginRepository>
-	</pluginRepositories>
 </project>
