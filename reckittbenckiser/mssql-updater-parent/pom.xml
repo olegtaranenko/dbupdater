@@ -181,7 +181,7 @@
 								<enableFiltering>true</enableFiltering>
 								<url>jdbc:jtds:sqlserver://${mssql.server}${sql.protocol};DatabaseName=master</url>
 								<srcFiles>
-									<sqlFile>${project.build.outputDirectory}/dbreload${env.COMPUTERNAME}.sql</sqlFile>
+									<sqlFile>${project.build.outputDirectory}/${dbaction}${env.COMPUTERNAME}.sql</sqlFile>
 								</srcFiles>
 								<onError>continue</onError>
 							</configuration>
@@ -200,6 +200,7 @@
 			</build>
 			<properties>
 				<exec.plugin.version>1.1</exec.plugin.version>
+				<dbaction>dbreload</dbaction>
 			</properties>
 		</profile>
 		<profile>
