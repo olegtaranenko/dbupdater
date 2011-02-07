@@ -116,7 +116,7 @@
 	</build>
 
 	<properties>
-		<liquibase.version>2.0-rc8-SNAPSHOT</liquibase.version>
+		<liquibase.version>2.0.1-SNAPSHOT</liquibase.version>
 		<sql.plugin.version>1.4</sql.plugin.version>
 		<mssql.driver.groupId>net.sourceforge.jtds</mssql.driver.groupId>
 		<mssql.driver>net.sourceforge.jtds.jdbc.Driver</mssql.driver>
