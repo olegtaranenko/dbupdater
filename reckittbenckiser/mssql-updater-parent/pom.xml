@@ -116,7 +116,7 @@
 	</build>
 
 	<properties>
-		<liquibase.version>2.0.1-SNAPSHOT</liquibase.version>
+		<liquibase.version>2.0.1</liquibase.version>
 		<sql.plugin.version>1.4</sql.plugin.version>
 		<mssql.driver.groupId>net.sourceforge.jtds</mssql.driver.groupId>
 		<mssql.driver>net.sourceforge.jtds.jdbc.Driver</mssql.driver>
@@ -249,6 +249,20 @@
 					</plugin>
 				</plugins>
 			</build>
+		</profile>
+
+		<profile>
+			<id>on-bvepc</id>
+			<activation>
+				<property>
+					<name>dev.station</name>
+					<value>BVEPC</value>
+				</property>
+			</activation>
+
+			<properties>
+				<sql.protocol>:${mssql.url.port}</sql.protocol>
+			</properties>
 		</profile>
 
 		<profile>
