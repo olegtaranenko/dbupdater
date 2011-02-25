@@ -110,6 +110,24 @@
 						</execution>
 					</executions>
 				</plugin>
+				<plugin>
+					<groupId>com.keyboardsamurais.maven</groupId>
+					<artifactId>maven-timestamp-plugin</artifactId>
+					<version>1.1-SNAPSHOT</version>
+					<configuration>
+						<propertyName>timestamp</propertyName>
+						<timestampPattern>yyyy-MM-dd-HHmm</timestampPattern>
+					</configuration>
+					<executions>
+						<execution>
+							<id>build-number</id>
+							<phase>validate</phase>
+							<goals>
+								<goal>create</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
 
 			</plugins>
 		</pluginManagement>
@@ -131,9 +149,122 @@
 		<mssql.url.port>1433</mssql.url.port>
 		<sql.protocol>;namedPipe=true</sql.protocol>
 		<winnt.servicename>MSSQLSERVER</winnt.servicename>
+		<dump.filename>${project.artifactId}-${timestamp}.bkp</dump.filename>
+		<exec.plugin.version>1.1</exec.plugin.version>
 	</properties>
 
 	<profiles>
+
+		
+		<profile>
+			<id>dbbackup</id>
+			<build>
+				<pluginManagement>
+					<plugins>
+<!--
+						<plugin>
+							<groupId>org.codehaus.mojo</groupId>
+							<artifactId>buildnumber-maven-plugin</artifactId>
+							<executions>
+								<execution>
+									<id>build-number</id>
+									<phase>validate</phase>
+									<goals>
+										<goal>create</goal>
+									</goals>
+								</execution>
+							</executions>
+							<configuration>
+								<doCheck>false</doCheck>
+								<format>{0,date,yyyy-MM-ddHHmm}</format>
+								<items>
+									<item>timestamp</item>
+								</items>
+								<revisionOnScmFailure>true</revisionOnScmFailure>
+								<useLastCommittedRevision>true</useLastCommittedRevision>
+							</configuration>
+						</plugin>
+						<plugin>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-resources-plugin</artifactId>
+							<version>2.4.3</version>
+							<configuration>
+								<outputDirectory>${project.build.outputDirectory}/backup</outputDirectory>
+								<resources>
+									<resource>
+										<directory>${sql.backup.dir}</directory>
+										<filtering>false</filtering>
+										<includes>
+											<include>${dump.filename}</include>
+										</includes>
+ 			 		 				</resource>
+								</resources>
+							</configuration>
+							<executions>
+								<execution>
+									<id>copy-resources</id>
+									<phase>process-resources</phase>
+									<goals>
+										<goal>copy-resources</goal>
+									</goals>
+								</execution>
+							</executions>
+						</plugin>
+-->
+						<plugin>
+							<groupId>org.codehaus.mojo</groupId>
+							<artifactId>sql-maven-plugin</artifactId>
+							<configuration>
+								<enableFiltering>true</enableFiltering>
+								<url>jdbc:jtds:sqlserver://${mssql.server}${sql.protocol};DatabaseName=master</url>
+								<srcFiles>
+									<sqlFile>${project.build.outputDirectory}/${dbaction}${env.COMPUTERNAME}.sql</sqlFile>
+								</srcFiles>
+							</configuration>
+							<executions>
+								<execution>
+									<id>run-backup-sql</id>
+									<phase>process-resources</phase>
+									<goals>
+										<goal>execute</goal>
+									</goals>
+								</execution>
+							</executions>
+						</plugin>
+
+						<plugin>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-antrun-plugin</artifactId>
+							<version>1.6</version>
+							<executions>
+								<execution>
+									<phase>compile</phase>
+									<configuration>
+										<target>
+											<copy todir="${project.build.directory}/backup">
+												<fileset dir="${sql.backup.dir}">
+													<include name="${dump.filename}" />
+												</fileset>
+											</copy>
+		            
+										</target>
+									</configuration>
+									<goals>
+										<goal>run</goal>
+									</goals>
+								</execution>
+							</executions>
+						</plugin>
+
+					</plugins>
+				</pluginManagement>
+			</build>
+			<properties>
+				<dbaction>dbbackup</dbaction>
+			</properties>
+		</profile>
+		
+		
 		<profile>
 			<id>dbreload</id>
 			<build>
@@ -199,10 +330,10 @@
 				</pluginManagement>
 			</build>
 			<properties>
-				<exec.plugin.version>1.1</exec.plugin.version>
 				<dbaction>dbreload</dbaction>
 			</properties>
 		</profile>
+
 		<profile>
 			<id>checksum-correction</id>
 			<properties>
@@ -210,6 +341,7 @@
 				<changelog.file>${changelog.PATH}/checksum-${project.artifactId}.xml</changelog.file>
 			</properties>
 		</profile>
+
 		<profile>
 			<id>development</id>
 			<build>
@@ -235,6 +367,7 @@
 				</plugins>
 			</build>
 		</profile>
+
 		<profile>
 			<id>production</id>
 			<build>
