@@ -77,13 +77,6 @@
 					</configuration>
 					<executions>
 						<execution>
-							<id>generate-step</id>
-							<phase>compile</phase>
-							<goals>
-								<goal>updateSQL</goal>
-							</goals>
-						</execution>
-						<execution>
 							<id>update-step</id>
 							<phase>process-test-resources</phase>
 							<goals>
@@ -290,6 +283,34 @@
 				<dbaction>dbreload</dbaction>
 				<execution.id>run-sql</execution.id>
 			</properties>
+		</profile>
+
+		<profile>
+			<id>updateSQL</id>
+			<activation>
+				<property>
+					<name>updateSQL</name>
+				</property>
+			</activation>
+			<build>
+				<pluginManagement>
+					<plugins>
+						<plugin>
+							<groupId>org.liquibase</groupId>
+							<artifactId>liquibase-maven-plugin</artifactId>
+							<executions>
+								<execution>
+									<id>generate-step</id>
+									<phase>compile</phase>
+									<goals>
+										<goal>updateSQL</goal>
+									</goals>
+								</execution>
+							</executions>
+						</plugin>
+					</plugins>
+				</pluginManagement>
+			</build>
 		</profile>
 
 
