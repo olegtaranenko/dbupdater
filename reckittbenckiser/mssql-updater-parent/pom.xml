@@ -48,7 +48,7 @@
 					<executions>
 						<execution>
 							<id>load-properties</id>
-							<phase>prepare-resources</phase>
+							<phase>initialize</phase>
 							<goals>
 								<goal>read-project-properties</goal>
 							</goals>
@@ -97,7 +97,7 @@
 				<plugin>
 					<groupId>org.codehaus.mojo</groupId>
 					<artifactId>sql-maven-plugin</artifactId>
-					<version>1.4</version>
+					<version>${sql.plugin.version}</version>
 					<dependencies>
 						<!-- specify the dependent jdbc driver here -->
 						<dependency>
@@ -140,6 +140,7 @@
 	<properties>
 		<liquibase.version>2.0.1</liquibase.version>
 		<sql.plugin.version>1.4</sql.plugin.version>
+		<antrun.version>1.6</antrun.version>
 		<mssql.driver.groupId>net.sourceforge.jtds</mssql.driver.groupId>
 		<mssql.driver>net.sourceforge.jtds.jdbc.Driver</mssql.driver>
 		<mssql.driver.artifactId>jtds</mssql.driver.artifactId>
@@ -166,60 +167,10 @@
 			<build>
 				<pluginManagement>
 					<plugins>
-<!--
-						<plugin>
-							<groupId>org.codehaus.mojo</groupId>
-							<artifactId>buildnumber-maven-plugin</artifactId>
-							<executions>
-								<execution>
-									<id>build-number</id>
-									<phase>validate</phase>
-									<goals>
-										<goal>create</goal>
-									</goals>
-								</execution>
-							</executions>
-							<configuration>
-								<doCheck>false</doCheck>
-								<format>{0,date,yyyy-MM-ddHHmm}</format>
-								<items>
-									<item>timestamp</item>
-								</items>
-								<revisionOnScmFailure>true</revisionOnScmFailure>
-								<useLastCommittedRevision>true</useLastCommittedRevision>
-							</configuration>
-						</plugin>
-						<plugin>
-							<groupId>org.apache.maven.plugins</groupId>
-							<artifactId>maven-resources-plugin</artifactId>
-							<version>2.4.3</version>
-							<configuration>
-								<outputDirectory>${project.build.outputDirectory}/backup</outputDirectory>
-								<resources>
-									<resource>
-										<directory>${sql.backup.dir}</directory>
-										<filtering>false</filtering>
-										<includes>
-											<include>${dump.filename}</include>
-										</includes>
- 			 		 				</resource>
-								</resources>
-							</configuration>
-							<executions>
-								<execution>
-									<id>copy-resources</id>
-									<phase>process-resources</phase>
-									<goals>
-										<goal>copy-resources</goal>
-									</goals>
-								</execution>
-							</executions>
-						</plugin>
--->
 						<plugin>
 							<groupId>org.apache.maven.plugins</groupId>
 							<artifactId>maven-antrun-plugin</artifactId>
-							<version>1.6</version>
+							<version>${antrun.version}</version>
 							<executions>
 								<execution>
 									<phase>compile</phase>
@@ -275,7 +226,7 @@
 							<version>2.4.1</version>
 							<executions>
 								<execution>
-									<phase>compile</phase>
+									<phase>process-classes</phase>
 									<configuration>
 										<excludeDefaultDirectories>true</excludeDefaultDirectories>
 										<filesets>
@@ -302,9 +253,53 @@
 			</properties>
 		</profile>
 		
-		
+		<profile>
+			<id>saveLastReload</id>
+			<build>
+				<pluginManagement>
+					<plugins>
+						<plugin>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-antrun-plugin</artifactId>
+							<version>${antrun.version}</version>
+							<executions>
+								<execution>
+		 							<id>unjar-backup-file</id>
+									<phase>generate-sources</phase>
+									<configuration>
+										<target>
+											<unjar src="${backup.path}${backup.file}" dest="${sql.backup.dir}"/>
+										</target>
+									</configuration>
+									<goals>
+										<goal>run</goal>
+									</goals>
+								</execution>
+							</executions>
+						</plugin>
+
+					</plugins>
+				</pluginManagement>
+			</build>
+		</profile>
+
 		<profile>
 			<id>dbreload</id>
+			<properties>
+				<mssql.url.databasename>master</mssql.url.databasename>
+				<dbaction>dbreload</dbaction>
+				<execution.id>run-sql</execution.id>
+			</properties>
+		</profile>
+
+
+		<profile>
+			<id>mssql-restart</id>
+			<activation>
+				<property>
+					<name>restart</name>
+				</property>
+			</activation>
 			<build>
 				<pluginManagement>
 					<plugins>
@@ -347,9 +342,7 @@
 				</pluginManagement>
 			</build>
 			<properties>
-				<mssql.url.databasename>master</mssql.url.databasename>
-				<dbaction>dbreload</dbaction>
-				<execution.id>run-sql</execution.id>
+				<winnt.servicename>SQL Server (SQLEXPRESS)</winnt.servicename>
 			</properties>
 		</profile>
 
