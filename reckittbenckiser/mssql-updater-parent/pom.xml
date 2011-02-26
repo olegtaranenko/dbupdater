@@ -118,7 +118,7 @@
 
 						<enableFiltering>true</enableFiltering>
 						<srcFiles>
-							<sqlFile>${project.build.outputDirectory}/${dbaction}${env.COMPUTERNAME}.sql</sqlFile>
+							<sqlFile>${project.build.outputDirectory}/${dbaction}${computer.name}.sql</sqlFile>
 						</srcFiles>
 					</configuration>
 
@@ -157,6 +157,7 @@
 		<exec.plugin.version>1.1</exec.plugin.version>
 		<maven.build.timestamp.format>yyyy-MM-dd_HHmm</maven.build.timestamp.format>
 		<dump.filename>${project.artifactId}-${maven.build.timestamp}.bkp</dump.filename>
+		<computer.name>${env.COMPUTERNAME}</computer.name>
 	</properties>
 
 	<profiles>
