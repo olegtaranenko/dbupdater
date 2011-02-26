@@ -12,7 +12,6 @@
 
 
 	<build>
-		<sourceDirectory>src/main/liquibase</sourceDirectory>
 		<resources>
 			<resource>
 				<directory>src/main/liquibase</directory>
@@ -20,6 +19,13 @@
 					<include>**/*.xml</include>
 					<include>**/*.sql</include>
 					<include>**/*.csv</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>src/main/liquibase</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>**/*.properties</include>
 				</includes>
 			</resource>
 		</resources>
@@ -35,6 +41,20 @@
 					</configuration>
 				</plugin>
 -->
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>properties-maven-plugin</artifactId>
+					<version>1.0-alpha-2</version>
+					<executions>
+						<execution>
+							<id>load-properties</id>
+							<phase>initialize</phase>
+							<goals>
+								<goal>read-project-properties</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
 				<plugin>
 					<groupId>org.liquibase</groupId>
 					<artifactId>liquibase-maven-plugin</artifactId>
@@ -72,11 +92,12 @@
 						</execution>
 					</executions>
 				</plugin>
+
+
 				<plugin>
 					<groupId>org.codehaus.mojo</groupId>
 					<artifactId>sql-maven-plugin</artifactId>
 					<version>${sql.plugin.version}</version>
-		 
 					<dependencies>
 						<!-- specify the dependent jdbc driver here -->
 						<dependency>
@@ -85,8 +106,6 @@
 							<version>${mssql.driver.version}</version>
 						</dependency>
 					</dependencies>
-		 
-					<!-- common configuration shared by all executions -->
 					<configuration>
 						<url>jdbc:jtds:sqlserver://${mssql.server}${sql.protocol};databaseName=${mssql.url.databasename}</url>
 						<driver>${mssql.driver}</driver>
@@ -96,14 +115,17 @@
 						<delimiterType>row</delimiterType>
 						<delimiter>GO</delimiter>
 						<keepFormat>true</keepFormat>
-<!--
-						<onError>continue</onError>
--->
+
+						<enableFiltering>true</enableFiltering>
+						<srcFiles>
+							<sqlFile>${project.build.outputDirectory}/${dbaction}${env.COMPUTERNAME}.sql</sqlFile>
+						</srcFiles>
 					</configuration>
+
 					<executions>
 						<execution>
-							<id>apply-sql</id>
-							<phase>install</phase>
+							<id>run-sql-${dbaction}</id>
+							<phase>process-resources</phase>
 							<goals>
 								<goal>execute</goal>
 							</goals>
@@ -116,8 +138,9 @@
 	</build>
 
 	<properties>
-		<liquibase.version>2.0.1-SNAPSHOT</liquibase.version>
+		<liquibase.version>2.0.1</liquibase.version>
 		<sql.plugin.version>1.4</sql.plugin.version>
+		<antrun.version>1.6</antrun.version>
 		<mssql.driver.groupId>net.sourceforge.jtds</mssql.driver.groupId>
 		<mssql.driver>net.sourceforge.jtds.jdbc.Driver</mssql.driver>
 		<mssql.driver.artifactId>jtds</mssql.driver.artifactId>
@@ -131,11 +154,152 @@
 		<mssql.url.port>1433</mssql.url.port>
 		<sql.protocol>;namedPipe=true</sql.protocol>
 		<winnt.servicename>MSSQLSERVER</winnt.servicename>
+		<exec.plugin.version>1.1</exec.plugin.version>
+		<maven.build.timestamp.format>yyyy-MM-dd_HHmm</maven.build.timestamp.format>
+		<dump.filename>${project.artifactId}-${maven.build.timestamp}.bkp</dump.filename>
 	</properties>
 
 	<profiles>
+
+		
+		<profile>
+			<id>dbbackup</id>
+			<build>
+				<pluginManagement>
+					<plugins>
+						<plugin>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-antrun-plugin</artifactId>
+							<version>${antrun.version}</version>
+							<executions>
+								<execution>
+									<phase>compile</phase>
+									<configuration>
+										<target>
+											<copy todir="${target.backup.dir}">
+												<fileset dir="${sql.backup.dir}">
+													<include name="${dump.filename}" />
+												</fileset>
+											</copy>
+								
+											<copy todir="${target.backup.dir}">
+												<fileset dir="${project.build.outputDirectory}">
+													<include name="backup.properties" />
+												</fileset>
+											</copy>
+										</target>
+									</configuration>
+									<goals>
+										<goal>run</goal>
+									</goals>
+								</execution>
+							</executions>
+						</plugin>
+
+
+						<plugin>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-jar-plugin</artifactId>
+							<version>2.3.1</version>
+							<executions>
+								<execution>
+									<phase>compile</phase>
+									<configuration>
+										<classesDirectory>${target.backup.dir}</classesDirectory>
+										<finalName>${dump.filename}</finalName>
+										<outputDirectory>${project.build.directory}/..</outputDirectory>
+										<archive>
+											<addMavenDescriptor>false</addMavenDescriptor>
+											<index>false</index>
+										</archive>
+									</configuration>
+									<goals>
+										<goal>jar</goal>
+									</goals>
+								</execution>
+							</executions>
+						</plugin>
+
+						<plugin>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-clean-plugin</artifactId>
+							<version>2.4.1</version>
+							<executions>
+								<execution>
+									<phase>process-classes</phase>
+									<configuration>
+										<excludeDefaultDirectories>true</excludeDefaultDirectories>
+										<filesets>
+											<fileset>
+												<directory>${target.backup.dir}</directory>
+											</fileset>
+										</filesets>
+									</configuration>
+									<goals>
+										<goal>clean</goal>
+									</goals>
+								</execution>
+							</executions>
+						</plugin>
+
+					</plugins>
+				</pluginManagement>
+			</build>
+			<properties>
+				<mssql.url.databasename>master</mssql.url.databasename>
+				<target.backup.dir>${project.build.directory}/backup</target.backup.dir>
+				<execution.id>run-backup-sql</execution.id>
+				<dbaction>dbbackup</dbaction>
+			</properties>
+		</profile>
+		
+		<profile>
+			<id>saveLastReload</id>
+			<build>
+				<pluginManagement>
+					<plugins>
+						<plugin>
+							<groupId>org.apache.maven.plugins</groupId>
+							<artifactId>maven-antrun-plugin</artifactId>
+							<version>${antrun.version}</version>
+							<executions>
+								<execution>
+		 							<id>unjar-backup-file</id>
+									<phase>generate-sources</phase>
+									<configuration>
+										<target>
+											<unjar src="${backup.path}${backup.file}" dest="${sql.backup.dir}"/>
+										</target>
+									</configuration>
+									<goals>
+										<goal>run</goal>
+									</goals>
+								</execution>
+							</executions>
+						</plugin>
+
+					</plugins>
+				</pluginManagement>
+			</build>
+		</profile>
+
 		<profile>
 			<id>dbreload</id>
+			<properties>
+				<mssql.url.databasename>master</mssql.url.databasename>
+				<dbaction>dbreload</dbaction>
+				<execution.id>run-sql</execution.id>
+			</properties>
+		</profile>
+
+
+		<profile>
+			<id>mssql-restart</id>
+			<activation>
+				<property>
+					<name>restart</name>
+				</property>
+			</activation>
 			<build>
 				<pluginManagement>
 					<plugins>
@@ -174,34 +338,14 @@
 								</execution>
 							</executions>
 						</plugin>
-						<plugin>
-							<groupId>org.codehaus.mojo</groupId>
-							<artifactId>sql-maven-plugin</artifactId>
-							<configuration>
-								<enableFiltering>true</enableFiltering>
-								<url>jdbc:jtds:sqlserver://${mssql.server}${sql.protocol};DatabaseName=master</url>
-								<srcFiles>
-									<sqlFile>${project.build.outputDirectory}/dbreload${env.COMPUTERNAME}.sql</sqlFile>
-								</srcFiles>
-								<onError>continue</onError>
-							</configuration>
-							<executions>
-								<execution>
-									<id>run-sql-reload</id>
-									<phase>process-resources</phase>
-									<goals>
-										<goal>execute</goal>
-									</goals>
-								</execution>
-							</executions>
-						</plugin>
 					</plugins>
 				</pluginManagement>
 			</build>
 			<properties>
-				<exec.plugin.version>1.1</exec.plugin.version>
+				<winnt.servicename>SQL Server (SQLEXPRESS)</winnt.servicename>
 			</properties>
 		</profile>
+
 		<profile>
 			<id>checksum-correction</id>
 			<properties>
@@ -209,6 +353,7 @@
 				<changelog.file>${changelog.PATH}/checksum-${project.artifactId}.xml</changelog.file>
 			</properties>
 		</profile>
+
 		<profile>
 			<id>development</id>
 			<build>
@@ -234,6 +379,7 @@
 				</plugins>
 			</build>
 		</profile>
+
 		<profile>
 			<id>production</id>
 			<build>
@@ -248,6 +394,20 @@
 					</plugin>
 				</plugins>
 			</build>
+		</profile>
+
+		<profile>
+			<id>on-bvepc</id>
+			<activation>
+				<property>
+					<name>dev.station</name>
+					<value>BVEPC</value>
+				</property>
+			</activation>
+
+			<properties>
+				<sql.protocol>:${mssql.url.port}</sql.protocol>
+			</properties>
 		</profile>
 
 		<profile>
